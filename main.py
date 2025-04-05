@@ -7,9 +7,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-import subprocess
-
-from IPython.display import Image, display
 from langgraph.graph import StateGraph, START, END
 
 from models import *
@@ -30,7 +27,13 @@ def main():
     # Add
     graph = graph_builder.compile()
     
-    result = graph.invoke({"graph_state": "hallo welt"})
+    
+    h_query = HumanMessage(content=input("User:\n"))
+    query = [sys_msg, h_query]
+    initial_state = State(graph_state=query)
+    
+    result = graph.invoke(initial_state)
+    print(type(result))
     print(result)
 
     
