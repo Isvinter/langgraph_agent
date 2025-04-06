@@ -27,37 +27,27 @@ def main():
     # Add
     graph = graph_builder.compile()
     
+    #initialisierung des states ausserhalb der schleife für persistenz
+    state = State()
+    state = graph_state_reducer(state, sys_msg)
     
-    h_query = HumanMessage(content=input("User:\n"))
-    query = [sys_msg, h_query]
-    initial_state = State(graph_state=query)
-    
-    result = graph.invoke(initial_state)
-    print(type(result))
-    print(result)
-
-    
-    
-
-    
-    #display(Image(graph.get_graph().draw_mermaid_png()))
-     
-    #query = input("User:\n")
-
-    #response = llm.invoke(query)
-    
-    #print(response.content)
-    
-    
-    #def node_1(state):
-    #    print("_____node_1_____")
-    #    respone = llm.invoke(state["graph_state"])
-    #    return {"graph_state": state['graph_state'] +f"{respone.content}"}
-    
-
-
-
-    #builder = StateGraph(State)
+    #Main loop
+    while True:
+        
+        #einlesen user-query
+        user_input = input("User ('exit', 'quit' or 'bye' to end conversation):\n")
+        if user_input.lower() in ["exit", "quit", "bye"]:
+            print("Goodbye")
+            break
+        h_query = HumanMessage(content=user_input)
+        
+        #user-query an state anhängen und graph ausführen
+        state = graph_state_reducer(state, h_query)
+        result = graph.invoke(state)
+        
+        #ergebnisse ausgeben:
+        print(type(result))
+        print(result)
     
 
 if __name__ == "__main__":

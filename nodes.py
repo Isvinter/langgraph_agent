@@ -1,5 +1,5 @@
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, AIMessage
 
 from pydantic import BaseModel, Field
 
@@ -17,7 +17,7 @@ sys_msg = SystemMessage(content="""You are a helpful assistand twich expert know
 
 #klasasendefinition state
 class State(BaseModel):
-    graph_state: List[BaseMessage] = Field(default_factory=list)
+    graph_state: List[AnyMessage] = Field(default_factory=list)
     
 #initialisierung des states mit system-message asl erste message 
 def initialize_state(state: State) -> State:
@@ -38,14 +38,16 @@ def tevily_websearch(query):
     search_docs = tavily_search.invoke(query)
     return search_docs
 
+def graph_state_reducer(state: State, new_message: AnyMessage) -> State:
+    new_state = state.model_copy()
+    new_state.graph_state.append(new_message)
+    return new_state
+
 #llm-knoten
 def llm_node(state: State):
     messages = [{"role": msg.type, "content": msg.content} for msg in state.graph_state]
-    result_ai = llm_open_ai.invoke(messages)
-    new_state = state.model_copy()
-    new_state.graph_state.append(result_ai)
-    
-    return new_state
+    result_ai = llm_open_ai.invoke(messages)    
+    return graph_state_reducer(state, result_ai)
     
 
        
