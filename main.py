@@ -1,20 +1,17 @@
 import os
-from typing import Literal
-from typing_extensions import TypedDict
-from IPython.display import Image, display
-
-from langchain_google_genai import ChatGoogleGenerativeAI 
-
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage
 
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
 
 from models import *
 from nodes import *
 
 
-
 def main():
+    
+    memory = MemorySaver()
+    config = {"configurable": {"thread_id": 1}}
         
     #contruct Graph
     graph_builder = StateGraph(State)
@@ -25,11 +22,11 @@ def main():
     graph_builder.add_edge("llm_node", END)
     
     # Add
-    graph = graph_builder.compile()
+    #graph = graph_builder.compile()
+    graph_memory = graph_builder.compile(checkpointer=memory)
     
-    #initialisierung des states ausserhalb der schleife für persistenz
-    state = State()
-    state = graph_state_reducer(state, sys_msg)
+     #initialisierung des states ausserhalb der schleife für persistenz
+    state = State.with_sys_msg()
     
     #Main loop
     while True:
@@ -42,12 +39,12 @@ def main():
         h_query = HumanMessage(content=user_input)
         
         #user-query an state anhängen und graph ausführen
-        state = graph_state_reducer(state, h_query)
-        result = graph.invoke(state)
+        state.update_with(h_query)
+        result = graph_memory.invoke(state, config)
         
         #ergebnisse ausgeben:
         print(type(result))
-        print(result)
+        print(result["graph_state"][-1].content)
     
 
 if __name__ == "__main__":

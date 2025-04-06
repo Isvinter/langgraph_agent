@@ -10,14 +10,21 @@ from typing_extensions import List
 from models import *
 
 
-#system message 
-sys_msg = SystemMessage(content="""You are a helpful assistand twich expert knowledge in Coding, and natural sciences.
-                        When asked about topics touching natural sciences or informatics, tailer your answers to someone 
-                        who has already broad foundational knowledge in thos fields""")
-
 #klasasendefinition state
 class State(BaseModel):
     graph_state: List[AnyMessage] = Field(default_factory=list)
+    
+    @classmethod
+    def with_sys_msg(cls):
+        sys_msg = SystemMessage(content="""You are a helpful assistand twich expert knowledge in Coding, and natural sciences.
+                                When asked about topics touching natural sciences or informatics, tailer your answers to someone 
+                                who has already broad foundational knowledge in thos fields""")
+        return cls(graph_state=[sys_msg])
+    
+    def update_with(self, new_message: AnyMessage) -> "State":
+        new_state = self.model_copy()
+        new_state.graph_state.append(new_message)
+        return new_state
     
 #initialisierung des states mit system-message asl erste message 
 def initialize_state(state: State) -> State:
@@ -46,8 +53,8 @@ def graph_state_reducer(state: State, new_message: AnyMessage) -> State:
 #llm-knoten
 def llm_node(state: State):
     messages = [{"role": msg.type, "content": msg.content} for msg in state.graph_state]
-    result_ai = llm_open_ai.invoke(messages)    
-    return graph_state_reducer(state, result_ai)
+    result_ai = llm_open_ai.invoke(messages)
+    return state.update_with(result_ai)
     
 
        
