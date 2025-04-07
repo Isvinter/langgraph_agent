@@ -42,9 +42,15 @@ def main():
         state.update_with(h_query)
         result = graph_memory.invoke(state, config)
         
+        #state-objekt updaten
+        #state = result
+        
         #ergebnisse ausgeben:
         print(type(result))
         print(result["graph_state"][-1].content)
+        
+        if len(state.graph_state) > 3:
+            state = state.delete_message(-3, None)
     
 
 if __name__ == "__main__":

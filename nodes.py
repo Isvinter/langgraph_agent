@@ -26,6 +26,19 @@ class State(BaseModel):
         new_state.graph_state.append(new_message)
         return new_state
     
+    def delete_message(self, startindex, stopindex):
+        """removes a message from a list or returns a slice of the message list (startindex, stopindex)
+        
+        args: startindex, stopindex"""
+        new_state = self.model_copy()
+        if startindex == stopindex:
+            del new_state.graph_state[startindex]
+        else:
+            slice_list = new_state.graph_state[startindex: stopindex]
+            new_state.graph_state = slice_list
+        return new_state
+            
+    
 #initialisierung des states mit system-message asl erste message 
 def initialize_state(state: State) -> State:
     if not state.graph_state:
@@ -44,11 +57,6 @@ def tevily_websearch(query):
     tavily_search = TavilySearchResults(max_results=3)
     search_docs = tavily_search.invoke(query)
     return search_docs
-
-def graph_state_reducer(state: State, new_message: AnyMessage) -> State:
-    new_state = state.model_copy()
-    new_state.graph_state.append(new_message)
-    return new_state
 
 #llm-knoten
 def llm_node(state: State):
