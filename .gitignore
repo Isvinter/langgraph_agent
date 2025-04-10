@@ -1,6 +1,10 @@
 .env
 venv
 test.py
+test2.ipynb
+tests.ipynb
+test.ipynb
 __pycache__/
 *.py[cod]
 *$py.class
+graph.png

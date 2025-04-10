@@ -36,21 +36,27 @@ def main():
         if user_input.lower() in ["exit", "quit", "bye"]:
             print("Goodbye")
             break
+        
         h_query = HumanMessage(content=user_input)
         
         #user-query an state anhängen und graph ausführen
         state.update_with(h_query)
-        result = graph_memory.invoke(state, config)
         
-        #state-objekt updaten
-        #state = result
+        try:
+            result = graph_memory.invoke(state, config)
+            for msg in result["graph_state"]:
+                state = state.update_with(msg)
+        except Exception as e:
+            print(f"Error: {e}")
+            continue
         
         #ergebnisse ausgeben:
         print(type(result))
-        print(result["graph_state"][-1].content)
+        print(result)
         
-        if len(state.graph_state) > 3:
-            state = state.delete_message(-3, None)
+        if len(state.graph_state) > 9:
+            state = state.summarize_conversation()
+            state = state.delete_message(-4, None)
     
 
 if __name__ == "__main__":
